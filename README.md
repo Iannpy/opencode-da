@@ -72,6 +72,18 @@ Restart OpenCode and you're ready.
 
 ## Usage
 
+### Execution Modes
+
+The orchestrator supports three execution modes. It will ask you which one to use when you first trigger the pipeline:
+
+| Mode | Behavior | Best For |
+|------|----------|----------|
+| **Auto** | Runs all 6 phases without pausing, shows only the final report | Quick analysis, known objectives |
+| **Interactive** | Pauses after each phase, shows results, asks to continue or adjust | Exploration, iterative tuning |
+| **Learning** | Like Interactive but teaches along the way — explains WHY each technique is chosen, what alternatives exist, and tradeoffs | Learning data science while doing analysis |
+
+Default is **Interactive**. The choice is cached for the session.
+
 ### Trigger the Pipeline
 
 Just drop a CSV and ask:
