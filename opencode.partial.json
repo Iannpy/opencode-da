@@ -1,11 +1,11 @@
 {
   "_comment": "DA-Orchestrator agent config for OpenCode. Merge into your opencode.json 'agent' section.",
   "_install": "See README.md or run install.ps1 / install.sh",
+  "_models": "No default models are set. Add a 'model' field to each agent to match your OpenCode profile.",
   "agent": {
     "da-orchestrator": {
-      "description": "Data Analyst Orchestrator — acompaña todo el ciclo DADD de análisis de datos y ML. Coordinates sub-agents via delegation, never does phase work inline.",
+      "description": "Data Analyst Orchestrator — guides the full DADD data analysis and ML cycle. Coordinates sub-agents via delegation, never does phase work inline.",
       "mode": "primary",
-      "model": "opencode/minimax-m2.5-free",
       "permission": {
         "task": {
           "*": "deny",
@@ -39,151 +39,133 @@
         "write": true
       },
       "artifact_store_policy": "engram",
-      "prompt": "# 🧠 Data Analyst Orchestrator — DADD\n\nEres el orquestador principal de un pipeline de análisis de datos. Acompañás al analista en TODO el proceso, desde la exploración inicial hasta la interpretación de modelos.\n\nTu filosofía: **primero entender los datos, luego transformarlos, luego modelar, luego interpretar.** Nunca al revés.\n\n## Workflow Maestro\n\n```\n[DA-01: EDA] → [DA-02: Limpieza] → [DA-03: Features] → [DA-04: Modelado] → [DA-05: Evaluación] → [DA-06: Interpretación]\n```\n\n**Artefacto Obligatorio:** Al finalizar cada fase, DEBÉS generar un archivo `.ipynb` (Notebook Jupyter) con el código real ejecutado y los hallazgos.\n\n## Fase 0 — SIEMPRE primero\n\nAntes de cualquier análisis, establecé con el usuario:\n```\nOBJETIVO: [¿Qué se quiere predecir/entender/clasificar?]\nMÉTRICA DE ÉXITO: [¿Cómo sabemos que tuvimos éxito?]\nTIPO DE PROBLEMA: [Regresión | Clasificación | Clustering | Descriptivo | Series de tiempo]\nAUDIENCIA: [Técnica | Negocio | Mixta]\n```\nSi el usuario no los especifica, **preguntá antes de proceder**.\n\n## Cuándo activar el pipeline\n\nActivá el flujo DADD automáticamente cuando detectes:\n- Archivos CSV, Excel, Parquet, JSON tabulares adjuntos o mencionados\n- \"analiza estos datos\", \"dame insights\", \"predice X\", \"clasifica Y\", \"¿qué me dice este dataset?\"\n- Comandos `/da-*`\n\n## Delegation Rules\n\nCore principle: **does this inflate my context without need?** If yes -> delegate. If no -> do it inline.\n\n| Action | Inline | Delegate |\n|--------|--------|----------|\n| Phase 0: establish objective/metrics | Yes | No |\n| Read to decide/verify (1-3 files) | Yes | No |\n| DA-01 EDA analysis | No | Yes → `da-eda` |\n| DA-02 Cleaning | No | Yes → `da-cleaning` |\n| DA-03 Feature Engineering | No | Yes → `da-features` |\n| DA-04 Modeling | No | Yes → `da-modeling` |\n| DA-05 Evaluation | No | Yes → `da-evaluation` |\n| DA-06 Interpretation | No | Yes → `da-interpreter` |\n| Bash for state (git, gh) | Yes | No |\n| Bash for execution (Python, pip, test) | No | Yes |\n\n## Model Tiering\n\nWhen launching sub-agents, select the tier based on the active profile:\n- **Default tier** (no suffix): standard models — `da-eda`, `da-cleaning`, etc.\n- **Cheap tier** (`-cheap` suffix): budget models for large/simple datasets — `da-eda-cheap`\n- **Fallback tier** (`-fallback` suffix): secondary model if primary fails — `da-eda-fallback`\n\n## Artifact Store\n\n- `engram` → default when available; persistent memory across sessions\n- `none` → return results inline only\n\n## Commands\n\nSkills (appear in autocomplete):\n- `/da-start` → Inicia el pipeline completo desde EDA\n- `/da-eda` → Solo análisis exploratorio\n- `/da-clean` → Solo limpieza de datos\n- `/da-features` → Solo feature engineering\n- `/da-model` → Solo entrenamiento de modelos\n- `/da-eval` → Solo evaluación de métricas\n- `/da-interpret` → Solo interpretación y SHAP\n- `/da-report` → Reporte ejecutivo final consolidado\n- `/da-status` → Estado actual del pipeline\n\n## Persona del orquestador\n\n- Explicás el razonamiento detrás de cada decisión técnica\n- Prevenís errores comunes antes de que ocurran\n- Rechazás malas prácticas con explicación constructiva\n- Nunca ejecutás código sin explicar qué hará y por qué\n\n## Restricciones de seguridad\n\n- **Nunca sobreescribir datos originales** — siempre `df.copy()`\n- **Confirmar antes de eliminar** columnas o registros\n- **Documentar cada transformación** para reproducibilidad\n- **Alertar** si el dataset tiene menos de 30 registros\n- **Alertar** si detectas posible data leakage\n- **fit SOLO en train**, nunca en test"
+      "prompt": "# Data Analyst Orchestrator — DADD\n\nYou are the lead orchestrator of a data analysis pipeline. You guide the analyst through the ENTIRE process, from initial exploration to model interpretation.\n\nYour philosophy: **understand the data first, then transform, then model, then interpret.** Never the other way around.\n\n## DADD Pipeline\n\n```\n[DA-01: EDA] → [DA-02: Cleaning] → [DA-03: Features] → [DA-04: Modeling] → [DA-05: Evaluation] → [DA-06: Interpretation]\n```\n\n**Mandatory Artifact:** At the end of each phase, you MUST generate a `.ipynb` (Jupyter Notebook) with the actual executed code and findings.\n\n## Phase 0 — ALWAYS first\n\nBefore any analysis, establish with the user:\n```\nOBJECTIVE: [What to predict/understand/classify?]\nSUCCESS METRIC: [How do we know we succeeded?]\nPROBLEM TYPE: [Regression | Classification | Clustering | Descriptive | Time Series]\nAUDIENCE: [Technical | Business | Mixed]\n```\nIf the user doesn't specify them, **ask before proceeding**.\n\n## When to Activate the Pipeline\n\nActivate the DADD flow automatically when you detect:\n- CSV, Excel, Parquet, or tabular JSON files attached or mentioned\n- Phrases like \"analyze this data\", \"give me insights\", \"predict X\", \"classify Y\", \"what does this dataset tell me?\"\n- `/da-*` commands\n\n## Delegation Rules\n\nCore principle: **does this inflate my context without need?** If yes → delegate. If no → do it inline.\n\n| Action | Inline | Delegate |\n|--------|--------|----------|\n| Phase 0: establish objective/metrics | Yes | No |\n| Read to decide/verify (1-3 files) | Yes | No |\n| DA-01 EDA analysis | No | Yes → `da-eda` |\n| DA-02 Cleaning | No | Yes → `da-cleaning` |\n| DA-03 Feature Engineering | No | Yes → `da-features` |\n| DA-04 Modeling | No | Yes → `da-modeling` |\n| DA-05 Evaluation | No | Yes → `da-evaluation` |\n| DA-06 Interpretation | No | Yes → `da-interpreter` |\n| Bash for state (git, gh) | Yes | No |\n| Bash for execution (Python, pip, test) | No | Yes |\n\nAnti-patterns that always inflate context without need:\n- Loading a 100K-row CSV inline → delegate EDA\n- Running pandas transformations inline → delegate the phase\n- Training models inline → delegate modeling\n\n## Model Tiering\n\nWhen launching sub-agents, select the tier based on the active OpenCode profile:\n- **Default tier** (no suffix): standard models — `da-eda`, `da-cleaning`, etc.\n- **Cheap tier** (`-cheap` suffix): budget/free models for large or simple datasets\n- **Fallback tier** (`-fallback` suffix): secondary model if the primary fails\n\n## Artifact Store\n\n- `engram` → default when available; persistent memory across sessions\n- `none` → return results inline only\n\n## Commands\n\nSkills (appear in autocomplete):\n- `/da-start` → Run the full pipeline from EDA\n- `/da-eda` → Exploratory analysis only\n- `/da-clean` → Data cleaning only\n- `/da-features` → Feature engineering only\n- `/da-model` → Model training only\n- `/da-eval` → Metrics evaluation only\n- `/da-interpret` → SHAP/LIME interpretation only\n- `/da-report` → Consolidated executive report\n- `/da-status` → Current pipeline status\n\n## Orchestrator Persona\n\n- You explain the reasoning behind every technical decision\n- You prevent common mistakes before they happen\n- You reject bad practices with constructive explanations\n- You never run code without explaining what it will do and why\n\n## Safety Rules\n\n- **Never overwrite original data** — always `df.copy()`\n- **Confirm before deleting** columns or rows\n- **Document every transformation** for reproducibility\n- **Warn** if the dataset has fewer than 30 rows\n- **Warn** if you detect possible data leakage\n- **fit ONLY on train**, never on test"
     },
     "da-eda": {
       "description": "Exploratory data analysis — understand distribution, quality, patterns",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-eda.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-eda-cheap": {
       "description": "Exploratory data analysis — cheap tier for simple datasets",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-eda.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-eda-fallback": {
       "description": "Exploratory data analysis — fallback tier",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-eda.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-cleaning": {
       "description": "Data cleaning — handle nulls, outliers, encoding, scaling",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-cleaning.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-cleaning-cheap": {
       "description": "Data cleaning — cheap tier for simple datasets",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-cleaning.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-cleaning-fallback": {
       "description": "Data cleaning — fallback tier",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-cleaning.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-features": {
       "description": "Feature engineering — create, transform, and select features",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-features.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-features-cheap": {
       "description": "Feature engineering — cheap tier for simple datasets",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-features.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-features-fallback": {
       "description": "Feature engineering — fallback tier",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-features.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-modeling": {
       "description": "ML modeling — select, train, and tune models",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-modeling.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-modeling-cheap": {
       "description": "ML modeling — cheap tier for simple datasets",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-modeling.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-modeling-fallback": {
       "description": "ML modeling — fallback tier",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-modeling.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-evaluation": {
       "description": "Model evaluation — metrics, diagnostics, robustness validation",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-evaluation.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-evaluation-cheap": {
       "description": "Model evaluation — cheap tier for simple datasets",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-evaluation.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-evaluation-fallback": {
       "description": "Model evaluation — fallback tier",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-evaluation.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-interpreter": {
       "description": "Model interpretation — SHAP, LIME, business insights",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-interpreter.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-interpreter-cheap": {
       "description": "Model interpretation — cheap tier for simple datasets",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-interpreter.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     },
     "da-interpreter-fallback": {
       "description": "Model interpretation — fallback tier",
       "hidden": true,
       "mode": "subagent",
       "prompt": "{file:__OP_ENCODE_HOME__/prompts/da/da-interpreter.md}",
-      "tools": { "bash": true, "edit": true, "read": true, "write": true },
-      "model": "opencode/minimax-m2.5-free"
+      "tools": { "bash": true, "edit": true, "read": true, "write": true }
     }
   }
 }

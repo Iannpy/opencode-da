@@ -76,7 +76,7 @@ Restart OpenCode and you're ready.
 
 Just drop a CSV and ask:
 
-> "Analizame este dataset de ventas, quiero predecir qué clientes van a cancelar"
+> "Analyze this sales dataset — I want to predict which customers will churn"
 
 Or use slash commands:
 
@@ -97,10 +97,10 @@ Or use slash commands:
 The orchestrator will always establish context before analysis:
 
 ```
-OBJETIVO:     What to predict/understand/classify?
-MÉTRICA:      How do we measure success?
-TIPO:         Regression | Classification | Clustering | Descriptive | Time Series
-AUDIENCIA:    Technical | Business | Mixed
+OBJECTIVE:     What to predict/understand/classify?
+SUCCESS METRIC: How do we measure success?
+PROBLEM TYPE:   Regression | Classification | Clustering | Descriptive | Time Series
+AUDIENCE:       Technical | Business | Mixed
 ```
 
 ### What You Get
@@ -116,7 +116,7 @@ After a full pipeline run, you'll have:
 ├── da-05-evaluation.ipynb    # Metrics, diagnostics, confidence intervals
 ├── da-06-interpretation.ipynb # SHAP, business insights, counterfactuals
 ├── df_clean.csv              # Cleaned dataset
-├── modelo_final.pkl          # Trained model for production
+├── final_model.pkl           # Trained model for production
 ├── scaler.pkl                # Scaler for inference
 └── selected_features.json    # Feature list for inference pipeline
 ```
@@ -152,17 +152,25 @@ Each sub-agent:
 - Optional: `jq` (for Unix install script)
 - Optional: [Engram](https://github.com/gentleman-programming/engram) for cross-session memory (falls back to inline if unavailable)
 
-## Customizing Models
+## Model Configuration
 
-Edit the `model` field in your `opencode.json` for any DA agent:
+**No default models are set.** You must assign models to each agent based on your OpenCode setup.
+
+Add a `"model"` field to any agent entry in your `opencode.json`:
 
 ```json
+"da-orchestrator": {
+  "model": "opencode-go/deepseek-v4-pro"
+},
 "da-modeling": {
-  "model": "opencode-go/qwen3.6-plus"  // Upgrade for complex datasets
+  "model": "opencode-go/qwen3.6-plus"
+},
+"da-modeling-cheap": {
+  "model": "opencode/minimax-m2.5-free"
 }
 ```
 
-Or set per-profile models using OpenCode profiles.
+**Recommended approach:** copy the tier you need, assign models matching your OpenCode profiles. The orchestrator automatically selects the right tier (`-cheap` for budget profiles, fallback for resilience).
 
 ## Contributing
 
